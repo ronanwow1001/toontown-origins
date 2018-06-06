@@ -1,8 +1,8 @@
 sys.path =  []
 os.environ["TT_GAMESERVER"] = corpclash.net
 os.environ["TT_PLAYCOOKIE"] = kX7NpA4jl1JhKwnEpKhQX79S3Di46Y6WJyz4MiK2oxZoS
-ToontownStart: Starting the game.
-ToontownStart: setting default font
+ToontownCilentStart: Starting the game.
+ToontownCilentStart: setting default font
 :DisplayOptions: settingsFullScreen = False, embedded = False width=800 height=600
 Known pipe types:
   wglGraphicsPipe
@@ -14,4 +14,7 @@ Known pipe types:
 :display:windisplay(warning): SetForegroundWindow() failed!
 :display: Created output of type wglGraphicsWindow
 :display: Unable to set window properties: !undecorated !fixed_size
-import toontown.CilentStart
+import Toontown.CilentStart
+pause
+
+goto main
