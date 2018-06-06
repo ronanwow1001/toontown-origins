@@ -1,45 +1,58 @@
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using LauncherLib.Login;
+using LauncherLib.Net;
 
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2005
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Corporate Clash", "Corporate Clash\Corporate Clash.csproj", "{081848B9-ACF8-4B76-AE31-2536C79B0219}"
-	ProjectSection(ProjectDependencies) = postProject
-		{46664524-D177-43BA-87DF-9813A8DF9FBF} = {46664524-D177-43BA-87DF-9813A8DF9FBF}
-	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LauncherLib", "LauncherLib\LauncherLib.csproj", "{46664524-D177-43BA-87DF-9813A8DF9FBF}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Debug|x86 = Debug|x86
-		Release|Any CPU = Release|Any CPU
-		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{081848B9-ACF8-4B76-AE31-2536C79B0219}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{081848B9-ACF8-4B76-AE31-2536C79B0219}.Debug|Any CPU.Build.0 = Debug|x86
-		{081848B9-ACF8-4B76-AE31-2536C79B0219}.Debug|Any CPU.Deploy.0 = Debug|x86
-		{081848B9-ACF8-4B76-AE31-2536C79B0219}.Debug|x86.ActiveCfg = Debug|x86
-		{081848B9-ACF8-4B76-AE31-2536C79B0219}.Debug|x86.Build.0 = Debug|x86
-		{081848B9-ACF8-4B76-AE31-2536C79B0219}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{081848B9-ACF8-4B76-AE31-2536C79B0219}.Release|Any CPU.Build.0 = Release|Any CPU
-		{081848B9-ACF8-4B76-AE31-2536C79B0219}.Release|x86.ActiveCfg = Release|x86
-		{081848B9-ACF8-4B76-AE31-2536C79B0219}.Release|x86.Build.0 = Release|x86
-		{46664524-D177-43BA-87DF-9813A8DF9FBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{46664524-D177-43BA-87DF-9813A8DF9FBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{46664524-D177-43BA-87DF-9813A8DF9FBF}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{46664524-D177-43BA-87DF-9813A8DF9FBF}.Debug|x86.Build.0 = Debug|Any CPU
-		{46664524-D177-43BA-87DF-9813A8DF9FBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{46664524-D177-43BA-87DF-9813A8DF9FBF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{46664524-D177-43BA-87DF-9813A8DF9FBF}.Release|x86.ActiveCfg = Release|Any CPU
-		{46664524-D177-43BA-87DF-9813A8DF9FBF}.Release|x86.Build.0 = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {E3BD7AF8-E28F-48B7-8355-F123821F3C47}
-	EndGlobalSection
-EndGlobal
+namespace LauncherLib.Play
+{
+    public class Game : IGame
+    {
+        public Game(IAccount account, string name, string path, string gameServerUri)
+        {
+            Account = account ?? throw new ArgumentNullException(nameof(account));
+            Name = name;
+            Path = path;
+            GameServer = gameServerUri;
+        }
+
+        public IAccount Account { get; }
+
+        public string Name { get; }
+
+        public string Path { get; }
+
+        public string GameServer { get; }
+
+        /// <summary>
+        ///     Runs the game
+        /// </summary>
+        /// <returns>True if successfully ran; otherwise false.</returns>
+        public async Task<bool> Run()
+        {
+            Environment.SetEnvironmentVariable("TT_USERNAME", Account.Username);
+            Environment.SetEnvironmentVariable("TT_PASSWORD", Account.Password);
+            Environment.SetEnvironmentVariable("TT_GAMESERVER", await GetGameserver());
+
+            ProcessStartInfo startInfo = new ProcessStartInfo()
+            {
+                WindowStyle = ProcessWindowStyle.Hidden, // Hide the console window
+                FileName = Path
+            };
+
+            Process p = Process.Start(startInfo);
+            if (p != null)
+            {
+                p.WaitForExit();
+                Console.WriteLine(p.ExitCode);
+                return p.ExitCode == 3; // 3 is proper exit in python
+            }
+            return false;
+        }
+
+        private async Task<string> GetGameserver()
+        {
+            return await Http.GetGameServer(new Uri(GameServer));
+        }
+    }
+}
